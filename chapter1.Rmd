@@ -9,7 +9,6 @@ Everything went smoothly with first assignment. Installation of the 3 programs w
 ------------------------------------------------------------------------
 
 ```{r}
-# This is a so-called "R chunk" where you can write R code.
 
 date()
 
