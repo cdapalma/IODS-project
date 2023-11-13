@@ -1,14 +1,142 @@
-# Insert chapter 2 title here
+# Chapter 2 - Assignment 2
 
-*Describe the work you have done this week and summarize your learning.*
-
--   Describe your work and results clearly.
--   I have been going through the book 'R for Health Data Science'.
--   Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods.
--   Assume the reader has no previous knowledge of your data or the more advanced methods you are using.
+------------------------------------------------------------------------
 
 ```{r}
+
 date()
+
+```
+------------------------------------------------------------------------
+
+A full data set was provided for this exercise (<https://www.mv.helsinki.fi/home/kvehkala/JYTmooc/JYTOPKYS3-data.txt>). By reading the txt file and exploring the dimensions"dim()" and structure"str()" of the data we can see that the row data contains 183 observations and 64 variables.
+
+We want to group the combination variables inside a specific group. The variables beginning with "D", correspond to the deep questions, variables beginning with "SU" correspond to Surface questions, and variables begging with "ST"correspond to Strategic questions.
+
+By combine multiple questions into combination variables, we have now 7 variables in total. From the 183 observations, we have excluded 17 observations, which are the the exam points marked as zero. so, in summary we have now 166 observations and 7 variables.
+
+This was done inside the R script "create_learning_2014". After arranging the data I have created the cvs file inside the folder 'data' which will be use for the analysis.
+
+```{r,message=FALSE}
+
+library(dplyr)
+library(GGally)
+library(ggplot2)
+library(tidyverse)
+
+#reading our csv file and explore a bit their content by seeing dimensions and structure.
+
+output_learning2014 <- read.csv("data/output_learning2014.csv",sep = ",", header = T)
+
+#dimensions of out data frame
+dim(output_learning2014)
+#structure
+str(output_learning2014)
+#quick overview of the structure and values
+head(output_learning2014) 
+
 ```
 
-Here we go again...
+
+
+```{r,message=FALSE}
+
+#library(GGally)
+#library(ggplot2)
+
+#output_learning2014 <- read.csv("data/output_learning2014.csv",sep = ",", header = T)
+
+
+# create a more advanced plot matrix with ggpairs()
+#graphical overview of the data and show summaries of the variables in the data. 
+
+p <- ggpairs(output_learning2014, mapping = aes(col=gender, alpha=0.3),
+             lower = list(combo = wrap("facethist", bins = 20)))
+
+#color aesthetic (col) is mapped to the "gender" variable, and alpha is set to 0.3 for transparency.
+p
+
+```
+
+When we use, not just pairs() but work toguether with the libraries GGally and ggplot2 we have a more detailed look at the variables, their distributions and relationships.
+
+The ggpairs give us a graphical overview of our data and give us summaries of the variables. We can see from the matrix chart the distributions of 'Age', 'attitude', 'deep', 'stra', 'surf'', and 'points'. For example, for the 'Age', we con observe that we have the pick of our distribution around the age of 20 for females.\
+Also, we have the correlations between 'Age' vs 'Attitude', 'Age' vs 'deep', 'Age' vs 'Stra', 'Age' vs 'surf', 'Age' vs 'Points', 'attitude' vs 'deep', 'attitude vs 'stra', 'attitude' vs 'surf', 'attitude' vs 'Points', 'deep' vs 'stra', 'deep' vs 'surf', 'deep' vs 'Points', 'stra' vs 'surf', 'stra' vs 'Points', 'surf' vs 'Points'.
+
+Now we are creating the module for the regression asked in the exercise. I have chosen 'attitude', 'deep' and 'stra' as explanatory variables, and have fitted a regression model where exam points is the target variable.
+
+```{r,message=FALSE}
+
+#library(GGally)
+#library(ggplot2)
+
+#output_learning2014 <- read.csv("data/output_learning2014.csv",sep = ",", header = T)
+
+#Points will be the target variable.
+#explanatory variables will be attitude, deep and stra
+#regression model is the following, taking in consideration the up comments
+
+qplot(attitude + deep + stra, Points , data = output_learning2014) + geom_smooth(method = "lm")
+
+# fitting a linear model
+model1 <- lm(Points ~ attitude + deep + stra, data = output_learning2014)
+
+# printing my summary of the model
+summary(model1)
+
+```
+
+From the R console we can look for the Estimate values and understand what happens to target variable (if it goes up or down and by how much). In this example, we can estimate that if we increase by one unit in 'Points' then the 'attitude' will increase 3.5254, 'deep' will decrease 0.7492 and 'stra' will increase 0.9621.
+
+Also, we have the Multiple R-squared, which explains that 19.4% of the variation in the dependent variable. It is the percentage of how much has been explained by these predictors.
+
+I have removed the explanatory variable 'deep' from the code and fitted again the model. 
+
+```{r,message=FALSE}
+
+#library(GGally)
+#library(ggplot2)
+
+#output_learning2014 <- read.csv("data/output_learning2014.csv",sep = ",", header = T)
+
+#explanatory variables will be attitude and stra
+#Points will the target variable.
+#regression model is the following, taking in consideration the up comments
+
+qplot(attitude + stra, Points , data = output_learning2014) + geom_smooth(method = "lm")
+
+# fitting a linear model
+model2 <- lm(Points ~ attitude + stra, data = output_learning2014)
+
+# print out again my summary of the model
+summary(model2)
+
+```
+
+I have set up a 2x2 Grid for the next plots using the function par().
+
+I have produce diagnostic plots using the plot() function with the which argument to specify which diagnostic plots i want, according with the assignment. In this case, which = c(1, 2, 5) will produce me Residuals vs Fitted values, Normal QQ-plot, and Residuals vs Leverage plots.
+
+For the first one, residuals should be independent of each other. There should be no systematic pattern in the residuals over time or across observations. 
+In our case, we see that the residuals are equally and randomly distributed around 0, with essentially no pattern. Also, overall we see that the spread of the residuals is roughly equal across the range of fitted values. As residuals are linearly distributed, variance is uniform.
+
+A Normal Quantile-Quantile (QQ) plot of the residuals can be used to assess normality. The points on the QQ plot don't deviate significantly from the diagonal line, which suggests are normally distributed.
+
+With the residuals vs leverage plot We’re looking at how the spread of standardized residuals changes as the leverage
+The spread of standardized residuals shouldn’t change as a function of leverage. Our model tries to minimize the distance of the line from all the points. Points which are further from the line can sometimes have a greater influence over the plot and deleting them can change the model a lot.
+We can observe that we have more points concentrated on the left part of the plot, and some of the points close to the Cook's distance which can mean that those observations are not exerting a high influence on the regression coefficients. 
+
+
+```{r}
+#library(GGally)
+#library(ggplot2)
+
+#output_learning2014 <- read.csv("data/output_learning2014.csv",sep = ",", header = T)
+
+#my grid
+par(mfrow = c(2,2))
+
+#draw of the diagnostic plots: Residuals vs Fitted values, Normal QQ-plot and Residuals vs Leverage.
+plot(model2, which=c(1,2,5))
+
+```

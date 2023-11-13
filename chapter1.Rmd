@@ -1,16 +1,12 @@
-# Assignment 1 - Chapter 1
+# Chapter 1 - Assignment 1 
 
-*This course will help me getting familiar with R, RStudio and GitHub.  I hope I can learn some basics of data science and apply this knowledge on some of the data gathered during my PhD.*
+*This course will help me getting familiar with R, RStudio and GitHub. I hope I can learn some basics of data science and apply this knowledge on some of the data gathered during my PhD.*
 
 [**My GitHub repository**](https://github.com/cdapalma/IODS-project.git)
 
-Everything went smoothly with first assignment.
-Installation of the 3 programs went ok, and everything seems to be running. 
-It is my first time working with GitHub and Rstudio. 
-I have been trough some of the R Markdown syntax, and the language is quite strange for me.
-I didn't quite understood what the Personal Access Token brings more in terms of connection between RStudio and GitHub, as you already are working with the shared IODS.
+Everything went smoothly with first assignment. Installation of the 3 programs went ok, and everything seems to be running. It is my first time working with GitHub and Rstudio. I have been trough some of the R Markdown syntax, and the language is quite strange for me. I didn't quite understood what the Personal Access Token brings more in terms of connection between RStudio and GitHub, as you already are working with the shared IODS.
 
-***
+------------------------------------------------------------------------
 
 ```{r}
 # This is a so-called "R chunk" where you can write R code.
@@ -19,4 +15,4 @@ date()
 
 ```
 
-#The text continues here.
+
