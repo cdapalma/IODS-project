@@ -1,0 +1,317 @@
+# Chapter 3 - Assignment 3
+
+
+This data approach student achievement in secondary education of two Portuguese schools. The data include student grades, demographic, social and school related features) and it was collected by using school reports and questionnaires. Two datasets are provided regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por).
+In the R script ' create_alc.R' I have joined the two data sets using all other variables than "failures", "paid", "absences", "G1", "G2", "G3" as (student) identifiers.
+At the end our data set has 370 observations and 35 variables.
+
+Because we will use it for the analysis, one think important to understand is our logical column 'high_use', which was created in the wrangling exercise part. This column shows as TRUE when the average of the answers related to weekday and weekend alcohol consumption is > 2 and FALSE otherwise.
+
+For the exercise I will choose some of the variables, which will be explained later above.
+
+
+
+```{r,message=FALSE}
+
+library(tidyr)
+library(readr)
+library(dplyr)
+library(ggplot2)
+
+
+alc <- read.csv("data/alc.csv",sep = ",", header = T)
+
+variables_names <- colnames(alc)
+variables_names
+
+dim(alc)
+str(alc)
+
+```
+
+The variables that will be in interest to us are 'goout', which means going out with friends (numeric: from 1 - very low to 5 - very high), 'failures' which are the number of past class failures (numeric: n if 1<=n<3, else 4), 'absences' which are the number of school absences (numeric: from 0 to 93), 'G3' represents the final grade  (numeric: from 0 to 20, output target).
+
+For each variable we want to analyse its relationship with the alcohol consumption.
+So for each variable we can formulate a priori one personal hypothesis:
+Higher levels of going out with friends ('goout') might be associated with an increase in alcohol consumption. Students who go out more frequently may have higher alcohol consumption.
+Students with a higher number of past class failures ('failures') may exhibit higher alcohol consumption.
+A higher number of school absences ('absences') may be associated with higher alcohol consumption. Students who are frequently absent might have more opportunities for social activities, including alcohol consumption.
+There might be an inverse relationship between the final grade ('G3') and alcohol consumption. Students with lower grades might be more likely to engage in higher alcohol consumption.
+
+I have analysed the data with our 4 variables using cross-tabulations, bar plots and box plots. 
+The results shown to be a bit different from the hypotheses. We can conclude that we have more high use of alcohol when students are going out more often . The students who have high level of alcohol are the ones with zero failures at classes. The high level of alcohol consumption decreases with the number of failures. Students with more class absences present less high alcohol ingestion. Students with meddle range grades present the ones with more alcoohl consuption.
+
+
+
+```{r}
+
+
+alc %>% group_by(failures) %>% summarise(count = n()) 
+alc %>% group_by(absences) %>% summarise(count = n()) 
+alc %>% group_by(G3) %>% summarise(count = n()) 
+alc %>% group_by(goout) %>% summarise(count = n()) 
+
+
+
+#alc %>%
+#  group_by(high_use, sex) %>%
+#  summarise(failures = median(failures))
+
+
+#summary(alc$address)
+
+#cross-tabulations
+
+
+# Cross-tabulation of 'goout' with 'alc_use'
+cross_tab_goout <- table(alc$goout, alc$high_use)
+print("Cross-tabulation of 'goout' with 'high_use'")
+cross_tab_goout
+
+# Cross-tabulation of 'failures' with 'alc_use'
+cross_tab_failures <- table(alc$failures, alc$high_use)
+print("Cross-tabulation of 'failures' with 'high_use'")
+cross_tab_failures
+
+# Cross-tabulation of 'absences' with 'alc_use'
+cross_tab_absences <- table(alc$absences, alc$high_use)
+print("Cross-tabulation of 'absences' with 'high_use'")
+cross_tab_absences
+
+# Cross-tabulation of 'G3' with 'alc_use'
+cross_tab_G3 <- table(alc$G3, alc$high_use)
+print("Cross-tabulation of 'G3' with 'high_use'")
+cross_tab_G3
+
+#bar plots 
+# Bar plot for 'goout' and its relationship with 'alc_use'
+ggplot(data=alc, aes(x = goout, fill = high_use)) +
+  geom_bar() +  
+  labs(x = "Go Out with Friends", y = "Count", fill = "Alcohol Use") 
+
+# Bar plot for 'failures' and its relationship with 'alc_use'
+ggplot(alc, aes(x = failures, fill = high_use)) +
+  geom_bar() +
+  labs(x = "Number of Failures", y = "Count", fill = "Alcohol Use") 
+
+#for the last two plots, I've tryed diferent way of ploting the bars
+
+# Bar plot for 'absences' and its relationship with 'alc_use'
+ggplot(alc, aes(x = absences, fill = high_use)) +
+  geom_bar(position = "dodge", stat = "count") +
+  labs(x = "Number of Absences", y = "Count", fill = "Alcohol Use") 
+
+# Bar plot for 'G3' and its relationship with 'alc_use'
+ggplot(alc, aes(x = G3, fill = high_use)) +
+  geom_bar(position = "dodge", stat = "count") +
+  labs(x = "Final Grade (G3)", y = "Count", fill = "Alcohol Use")
+
+
+#boxplots
+
+g_failures <- ggplot(alc, aes(x = high_use, y = failures, col = sex))
+g_failures + geom_boxplot() + ylab("failures")
+
+g_g3 <- ggplot(alc, aes(x = high_use, y = G3, col = sex))
+g_g3 + geom_boxplot() + ylab("grade")
+
+g_absences <- ggplot(alc, aes(x = high_use, y = absences, col = sex))
+g_absences + geom_boxplot() + ylab("absences")
+
+g_goout <- ggplot(alc, aes(x = high_use, y = goout, col = sex))
+g_goout + geom_boxplot() + ylab("going_out")
+
+```
+
+
+
+I've used logistic regression to explore the relationship between my variables and the high/low alcohol consumption variable as the target variable. 
+
+For the variable 'failures', for each one-unit increase in the number of failures, the response of the high/low alcohol consumption (target variable) increases by 0.52078. The p-value (0.028128 ) is less than 0.05, indicating that the coefficient for failures is statistically significant.
+    
+For absences, for each additional absence, the log-odds of the response variable increases by 0.07373. The p-value is also less than 0.05 (0.000958), indicating that the coefficient for absences is statistically significant.
+
+For the final grade (G3), for each one-unit increase in the G3 variable, the response of the target variable decreases by 0.01612. Here, the p-value (0.699253) is greater than 0.05, indicating that the coefficient for G3 is not statistically significant. Therefore, the variable G3 is not contributing significantly to the model.
+
+For the variable of going out with friends, for each one-unit increase in the goout variable, the response of the target variable increases by 0.69791.The z-value (5.874) corresponds to a very small p-value (4.25e-09), which is highly statistically significant.
+
+The second part of the code fits a logistic regression model, extracts the coefficients, computes the odds ratios, calculates confidence intervals, and then prints out the odds ratios with their confidence intervals. The confint() function is used to obtain the confidence intervals for the coefficients, and the exp() function is applied to exponent the values. The cbind() function is used to combine the odds ratios and confidence intervals into a single matrix for printing.
+
+For failures, for each unity increased in the number of failures, the odds of the response variable increases by a factor of 1.6833396. (In summa, an increase in the number of failures is associated with an increase in the odds of high alcohol use).The 95% confidence interval for the odds ratio is (1.062542815 - 2.7040414).
+
+For absences, for each unit increased in the number of absences, the odds of the response variable increases by a factor of 1.0765213 (in summa, an increase in the number of absences is associated with a slight increase in the odds of high alcohol useHere). The 95% confidence interval for the odds ratio is 1.031833703 - 1.1275904.
+For the final grades variable the odds of the target variable is 0.9840135x the odds of the reference level. The 95% confidence interval is 0.906930755 - 1.0685440.
+For the variable of going out, the odds of the target variable is 2.0095429  x the odds of the reference level. The 95% confidence interval is 1.600845280 - 2.5531997.
+
+Regarding the Intercept, the odds of the baseline level of the target variable is 0.0326675 x the odds of the reference level when all predictors are zero. This indicates a lower likelihood of high alcohol use for the reference level. The 95% confidence interval for the odds ratio is 0.007953009  - 0.1220042.
+
+
+
+```{r}
+# Explore the dataset
+str(alc)
+
+# Fit the logistic regression model
+model <- glm(high_use ~ failures + absences + G3 + goout, 
+             data = alc, 
+             family = "binomial")
+summary(model)
+coef(model)
+# compute odds ratios (OR)
+OR <- coef(model) %>% exp
+
+# compute confidence intervals (CI)
+CI <- confint(model) %>% exp
+
+# print out the odds ratios with their confidence intervals
+result <- cbind(OR, CI)
+print(result)
+
+#model2 <- glm(high_use ~ failures + absences + G3 + goout -1,  data = alc,  family = "binomial")
+# summary(model2)
+#coef(model2)
+```
+
+The next part, provides insights into the performance of your logistic regression model, including accuracy, proportions, and inaccuracy metrics.
+
+The scatter plot visually represents the predicted probabilities against the actual values. The points are colored based on whether the prediction is above (TRUE) or below (FALSE) the threshold of 0.5.
+
+I computed a 2x2 confusion matrix to compare actual values and predictions. The confusion matrix provides counts of true positives, true negatives, false positives, and false negatives. For example, there are 252 true negatives (actual: FALSE, predicted: FALSE) and 33 true positives (actual: TRUE, predicted: TRUE).
+
+By adding Margins to the proportional confision Matrix, gives us the row and column sums, providing an overview of the distribution of actual and predicted values. It shows that 70% of the observations are predicted as FALSE, and 30% are predicted as TRUE.
+
+I've defined a loss function to compute the average number of wrong predictions. This indicates that if we predict all observations as 0 (using a threshold of 0.5), the average inaccuracy is 30%. also, if we predict all observations as 1 (using a threshold of 0.5), the average inaccuracy is 0.7 or 70%.
+
+I've adjusted the code to change the prob argument by giving it the prediction probabilities in alc, which give us the indication that the average inaccuracy is 22.97% using the actual predicted probabilities from the model. 
+
+```{r}
+m <- glm(high_use ~ sex + failures + absences, data = alc, family = "binomial")
+alc <- mutate(alc, probability = predict(m, type = "response"))
+alc <- mutate(alc, prediction = probability > 0.5)
+
+# initialize a plot of 'high_use' versus 'probability' in 'alc'
+g <- ggplot(alc, aes(x = probability, y = high_use))
+
+
+
+# add the aesthetic element col = prediction and draw the plot again
+g + geom_point(aes(col = prediction))
+
+# tabulate the target variable versus the predictions
+table(high_use = alc$high_use, prediction = alc$prediction)
+
+# adjust the code: use %>% to apply the prop.table() function on the output of table()
+table(high_use = alc$high_use, prediction = alc$prediction) %>% prop.table()
+
+# adjust the code: use %>% to apply the addmargins() function on the output of prop.table()
+table(high_use = alc$high_use, prediction = alc$prediction) %>% prop.table() %>% addmargins()
+
+
+
+#innacuracy 
+# define a loss function (mean prediction error)
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+
+
+# call loss_func to compute the average number of wrong predictions in the (training) data
+loss_func(class = alc$high_use, prob = 0)
+
+# adjust the code: change the prob argument in the loss function to prob = 1
+loss_func(class = alc$high_use, prob = 1)
+
+# adjust the code again: change the prob argument by giving it the prediction probabilities in alc (the column probability)
+loss_func(class = alc$high_use, prob = alc$probability)
+```
+Bonus and Super Bonus
+
+
+Cross-validation provides a more robust estimate of a model's performance by assessing its generalization to unseen data.
+The inaccuracy values give you an idea of how well the model is performing in terms of prediction errors. Lower inaccuracy values are generally desirable. The results [0.2297297] means the average inaccuracy (wrong predictions) on the training data is approximately 22.97%. So, on average, the model incorrectly predicts the outcome for about 22.97% of the observations when each observation is left out once during the cross-validation process.
+
+
+In 10-fold cross-validation, the average inaccuracy on the testing data is approximately 24.05%. This means that, on average, the model incorrectly predicts the outcome for about 24.05% of the observations when the dataset is split into 10 folds, and the model is trained and tested on different subsets in each iteration.
+
+The results suggest that the model's performance is relatively consistent between leave-one-out cross-validation and 10-fold cross-validation. Both estimates of average inaccuracy are in a similar range, indicating that the model is making incorrect predictions for around 22-24% of the observations.
+  
+
+```{r}
+library(boot)
+
+m <- glm(high_use ~ sex + failures + absences, data = alc, family = "binomial")
+alc <- mutate(alc, probability = predict(m, type = "response"))
+alc <- mutate(alc, prediction = probability > 0.5)
+
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+
+
+loss_func(class = alc$high_use, prob = alc$probability)
+
+# K-fold cross-validation
+cv <- cv.glm(data = alc, cost = loss_func, glmfit = m, K = nrow(alc))
+
+# average number of wrong predictions in the cross validation
+cv$delta[1]
+
+# 10-fold cross validation. 
+cv_10fold <- cv.glm(data = alc, cost = loss_func, glmfit = m, K = 10)
+cv_10fold$delta[1]
+
+```
+
+
+```{r}
+# Fit the initial logistic regression model with a high number of predictors
+full_model <- glm(high_use ~ ., 
+                  data = alc, 
+                  family = "binomial")
+
+# Extract the initial set of predictors
+initial_predictors <- c("failures", "absences", "G3", "goout", "sex")
+
+# Create a list to store the results
+cv_results_list <- list()
+
+# Perform cross-validation with different sets of predictors
+for (i in length(initial_predictors):1) {
+  current_predictors <- initial_predictors[1:i]
+  
+  # Fit the logistic regression model with the current set of predictors
+  current_model <- glm(high_use ~ ., 
+                        data = select(alc, all_of(c(current_predictors, "high_use"))), 
+                        family = "binomial")
+  
+  # Perform K-fold cross-validation
+  cv_results <- cv.glm(data = select(alc, all_of(c(current_predictors, "high_use"))), 
+                       cost = loss_func, glmfit = current_model, K = nrow(alc))
+  
+  # Store the results
+  cv_results_list[[i]] <- cv_results
+}
+
+# Extract training and testing errors
+training_errors <- sapply(cv_results_list, function(x) x$delta[1])
+testing_errors <- sapply(cv_results_list, function(x) x$delta[2])
+
+# Create a data frame for plotting
+results_df <- data.frame(
+  Predictors = length(initial_predictors):1,
+  Training_Error = training_errors,
+  Testing_Error = testing_errors
+)
+
+# Plot the trends of both training and testing errors by the number of predictors
+ggplot(results_df, aes(x = Predictors)) +
+  geom_line(aes(y = Training_Error, color = "Training Error")) +
+  geom_line(aes(y = Testing_Error, color = "Testing Error")) +
+  scale_color_manual(values = c("Training Error" = "blue", "Testing Error" = "red")) +
+  labs(x = "Number of Predictors", y = "Error Rate", title = "Cross-Validation Error by Number of Predictors") +
+  theme_minimal()
+```
+
+
