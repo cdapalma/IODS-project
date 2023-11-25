@@ -29,10 +29,10 @@ hd <- hd %>%
     HDI_rank_ = `HDI Rank`, 
     Country = `Country`, 
     HDI = `Human Development Index (HDI)`,
-    life_expectancy = `Life Expectancy at Birth`,
+    Life.Exp = `Life Expectancy at Birth`,
     mean_years_of_schooling = `Mean Years of Education`,
-    Exp_years_edu = `Expected Years of Education`,
-    GNI_per_capita = `Gross National Income (GNI) per Capita`,
+    Edu.Exp = `Expected Years of Education`,
+    GNI = `Gross National Income (GNI) per Capita`,
     GNI_HDI = `GNI per Capita Rank Minus HDI Rank`
   )
 
@@ -42,9 +42,9 @@ gii <- gii %>%
     GII_rank = `GII Rank`,
     Country = `Country`,
     GII = `Gender Inequality Index (GII)`,
-    MMR = `Maternal Mortality Ratio`, 
-    ABR = `Adolescent Birth Rate`, 
-    PRP = `Percent Representation in Parliament`, 
+    Mat.Mo = `Maternal Mortality Ratio`, 
+    Ado.Birth = `Adolescent Birth Rate`, 
+    Parli = `Percent Representation in Parliament`, 
     Edu2.F = `Population with Secondary Education (Female)`,
     Edu2.M = `Population with Secondary Education (Male)`, 
     Labo.F = `Labour Force Participation Rate (Female)`, 
@@ -60,8 +60,8 @@ dim(gii)
 
 gii <- gii %>%
   mutate(
-    SecondaryEducation_Ratio = Edu2.F / Edu2.M,
-    LaborForceParticipation_Ratio = Labo.F / Labo.M
+    Edu2.FM = Edu2.F / Edu2.M,
+    Labo.FM = Labo.F / Labo.M
   )
 
 
