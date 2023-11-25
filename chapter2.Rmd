@@ -1,13 +1,5 @@
 # Chapter 2 - Assignment 2
 
-------------------------------------------------------------------------
-
-```{r}
-
-date()
-
-```
-------------------------------------------------------------------------
 
 A full data set was provided for this exercise (<https://www.mv.helsinki.fi/home/kvehkala/JYTmooc/JYTOPKYS3-data.txt>). By reading the txt file and exploring the dimensions"dim()" and structure"str()" of the data we can see that the row data contains 183 observations and 64 variables.
 
