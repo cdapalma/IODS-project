@@ -26,25 +26,25 @@ summary(gii)
 # Rename variables in the human development dataset (hd)
 hd <- hd %>%
   rename(
-    HDI_rank_ = `HDI Rank`, 
+    HDI.Rank = `HDI Rank`, 
     Country = `Country`, 
     HDI = `Human Development Index (HDI)`,
     Life.Exp = `Life Expectancy at Birth`,
-    mean_years_of_schooling = `Mean Years of Education`,
+    Edu.Mean = `Mean Years of Education`,
     Edu.Exp = `Expected Years of Education`,
     GNI = `Gross National Income (GNI) per Capita`,
-    GNI_HDI = `GNI per Capita Rank Minus HDI Rank`
+    GNI.Minus.Rank = `GNI per Capita Rank Minus HDI Rank`
   )
 
 # Rename variables in the gender inequality dataset (gii)
 gii <- gii %>%
   rename(
-    GII_rank = `GII Rank`,
+    GII.Rank = `GII Rank`,
     Country = `Country`,
     GII = `Gender Inequality Index (GII)`,
-    Mat.Mo = `Maternal Mortality Ratio`, 
+    Mat.Mor = `Maternal Mortality Ratio`, 
     Ado.Birth = `Adolescent Birth Rate`, 
-    Parli = `Percent Representation in Parliament`, 
+    Parli.F = `Percent Representation in Parliament`, 
     Edu2.F = `Population with Secondary Education (Female)`,
     Edu2.M = `Population with Secondary Education (Male)`, 
     Labo.F = `Labour Force Participation Rate (Female)`, 
