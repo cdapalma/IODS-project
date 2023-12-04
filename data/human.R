@@ -5,13 +5,19 @@
 library(readr)
 library(dplyr)
 
+
 human <- read.csv("data/human.csv",sep = ",", header = T)
 str(human)
 
 dim(human)
-# Exclude variables 
-human <- human[, !(names(human) %in% c("HDI.Rank","GNI.Minus.Rank", "HDI", "Edu.Mean", "GII.Rank", "GII", "Edu2.F", "Edu2.M", "Labo.M", "Labo.F"))]
 
+# Exclude variables, other way to do it
+#human <- human[, !(colnames(human) %in% c("HDI.Rank","GNI.Minus.Rank", "HDI", "Edu.Mean", "GII.Rank", "GII", "Edu2.F", "Edu2.M", "Labo.M", "Labo.F"))]
+
+#the way done in exercise 5
+
+keep <- c("Country", "Edu2.FM", "Labo.FM", "Life.Exp", "Edu.Exp", "GNI", "Mat.Mor", "Ado.Birth", "Parli.F")
+human <- select(human, one_of(keep))
 str(human)
 dim(human)
 
@@ -30,3 +36,5 @@ human <- human %>% filter(!Country %in% regions)
 print(human$Country)
 str(human)
 dim(human)
+
+write_csv(human, "data/human2.csv")

@@ -1,0 +1,166 @@
+# Chapter 5 - Assignment 5
+
+
+Analysis Exercise
+
+```{r}
+
+library(dplyr)
+library(ggplot2)
+library(GGally)
+library(readr)
+library(corrplot)
+library(tibble)
+library(tidyr)
+
+#mine 
+human <- read_csv("data/human2.csv", show_col_types = FALSE)
+#professor
+#human <- read_csv("https://raw.githubusercontent.com/KimmoVehkalahti/Helsinki-Open-Data-Science/master/datasets/human2.csv", show_col_types = FALSE)
+```
+
+Point 1
+
+```{r}
+#%keep <- c("Country", "Edu2.FM", "Labo.FM", "Life.Exp", "Edu.Exp", "GNI", "Mat.Mor", "Ado.Birth", "Parli.F")
+#human <- select(human, one_of(keep))
+#human <- filter(human, complete.cases(human))
+#last <- nrow(human) - 7
+#human <- human[1:last, ]
+
+
+#move country name to rownames
+human_ <- column_to_rownames(human, "Country")
+
+
+str(human_)
+summary(human_)
+# visualize the 'human_' variables
+ggpairs(human_, progress = FALSE)
+
+# compute the correlation matrix and visualize it with corrplot
+cor(human_) %>% corrplot()
+
+#ggplot(human,aes(Life.Exp,GNI, label=Country)) + geom_point() + geom_text() + theme_bw()
+
+```
+After moving the country names to rownames, we were able to show a summarize of our data 
+I used ggpairs and corplot to see the relationship between the variables. We can observe that the variables correlate between each other and helps us to see the central tendency, variability, and distribution of each variable in your dataset
+
+The R console give us the range of values, the central tendency (mean, median), and the spread of the data for each variable. 
+For example, for the variable "Edu2.FM." the minimum value is 0.1717, and the maximum is 1.4967. The median is 0.9375, which indicates that the middle value of the data is close to this point.
+
+From the plots we can conclude that our variable are very highly correlated.
+
+The colors represented in our corplot represent the strength and direction of the correlation between pairs of variables, as we can see in the scale (around zero is little or no correlation).
+We can conclude that we have strong correlation for the circles with more intensity color and have bigger diemeter size. 
+Our blue circles represent positive correlations. For example if the variable Edu.Exp increases then Life.Exp tends also to increase.
+For the other hand, the red circles means a negative correlation. For example, if Life.Exp increases then Mat.Mor tends to decrease.
+
+
+Point 2 - PCA without standardizing
+
+```{r, message=FALSE}
+
+human <- column_to_rownames(human, "Country")
+summary(human)
+
+# perform principal component analysis 
+pca_human <- prcomp(human_)
+biplot(pca_human, choices = 1:2)
+summary(pca_human)
+
+
+#s <- summary(pca_human)
+#pca_pr <- round(1*s$importance[2, ], digits = 5)
+#print(pca_pr)
+#paste0(names(pca_pr), " (", pca_pr, "%)")
+#pc_lab = paste0(names(pca_pr), " (", pca_pr, "%)")
+#biplot(pca_human, cex = c(0.8, 1), col = c("grey40", "deeppink2"), xlab = pc_lab[1] , ylab = pc_lab[2])
+
+```
+
+
+
+Point 3 and 4 - PCA with standardizing and interpretation
+
+```{r}
+#human <- column_to_rownames(human, "Country")
+human_std <- scale(human)
+pca_human <- prcomp(human_std)
+
+# create and print out a summary of pca_human
+s <- summary(pca_human)
+
+
+# rounded percentanges of variance captured by each PC
+pca_pr <- round(1*s$importance[2, ], digits = 5)
+
+# print out the percentages of variance
+print(pca_pr)
+
+# create object pc_lab to be used as axis labels
+paste0(names(pca_pr), " (", pca_pr, "%)")
+pc_lab = paste0(names(pca_pr), " (", pca_pr, "%)")
+
+# draw a biplot
+biplot(pca_human, cex = c(0.8, 1), col = c("grey40", "deeppink2"), xlab = pc_lab[1] , ylab = pc_lab[2])
+
+```
+
+We can see that without standardizing the variables, the PCS is not very useful.
+The variance of the principle components are maximized. We can see with the chart without standardize variables that the double axes, related to GNI values, has values very big and that the data is not comparable.
+The GNI has such big values that all the variables that have small values hey don't  have enough variance. 
+This is why is so important to have the variables in the same space (standardization) to be able to compare them more equal in the same analysis, as we did with the function scale().
+
+By doing the PCS we can see how important this principle components are and understand if our multiple variables are very highly correlated.
+Now we can see that scale above and right refer to the original values of the variables, so they are in the range to -10 to 10.
+Then we move to principle components and we maximize de variance of the horizontal axis (PC1) . We can conclude that Labo.F and Parli.F  are related to the second principle component. they are very independent  from the other variables that are in other PC axis.
+
+By doing the PCA we can conclude that 53.605% of the dataset can be summarized in one variable, which is PC1 and that 16.237% of the dataset can be explained in another variable, which is PC2.
+Our variable Parli.F and Labo.F are highly correlated and can explained around 16% of our original dataset.
+
+
+Point 5
+
+```{r}
+library(FactoMineR)
+
+tea <- read.csv("https://raw.githubusercontent.com/KimmoVehkalahti/Helsinki-Open-Data-Science/master/datasets/tea.csv", stringsAsFactors = TRUE)
+
+str(tea)
+View(tea)
+
+keep_columns <- c("Tea", "How", "how", "sugar", "where", "lunch")
+tea_time <- select(tea, one_of(keep_columns))
+summary(tea_time)
+str(tea_time)
+
+
+# visualize the dataset
+pivot_longer(tea_time, cols = everything()) %>% 
+  ggplot(aes(value)) + 
+  facet_wrap("name", scales = "free") +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+
+
+#MCA
+mca <- MCA(tea_time, graph = FALSE)
+summary(mca)
+plot(mca, invisible=c("ind"), graph.type = "classic", habillage = "quali")
+
+```
+
+The contribution of the variable categories (in %) to the definition of the dimensions can be extracted in the R cosnole under the table which contains the three dimensions. 
+The dimensions (Dim.1, Dim.2, Dim.3) capture different patterns or structures in the categorical data. These patterns represent relationships or associations between categories of the variables. For example, in Dim.1, "how" and "where" have relatively high contributions (0.708 and 0.702, respectively), suggesting that these categories are important in explaining the patterns represented by Dim.1.
+
+The bar plot suggests that the biggest percentages of the individuals prefer to drink tea alone, outside lunch hours. The tea bag is the most used and Earl Grey tea is drinking type most used. Most of the people buys tea in the chain store. The difference between the individuals that drinks tee with and without sugar is low.
+
+The plot.MCA() generates a variable biplot, which displays the relationships between the variables, helping us to identify variables that are the most correlated with each dimension. 
+
+The axes of the plot represent the dimensions (factors) extracted by the MCA. Dimension 1 is represented by the horizontal axis and Dimension 2 by the vertical axis.The percentage of variability explained by each dimension is given: 15.24% for dimension 1 and 14.23% for the dimension 2.
+The distance of a point from the origin reflects the strength of its association with the dimensions. Categories farther from the origin have a stronger influence on the variability in the data.
+Along Dimension 1, we see on the map that 'tea shop' and 'unpackaged' are furthest away from the origin and therefore have the most importance (are the most correlated with dimension 1).
+
+
