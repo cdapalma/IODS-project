@@ -1,0 +1,186 @@
+# Chapter 6 - Assignment 6
+
+
+Analysis Exercise
+
+Part 1, using RATS data
+```{r}
+# Read RATS dataset
+RATS <- read_csv("data/RATS_long.csv", show_col_type = FALSE)
+
+RATS$ID <- factor(RATS$ID)
+RATS$Group <- factor(RATS$Group)
+
+
+# Plot the RATS data
+ggplot(RATS, aes(x = Time, y = Weight, group = ID, linetype = Group)) +
+  geom_line() +
+  scale_x_continuous(name = "Time (days)", breaks = seq(0, 60, 10)) +
+  scale_y_continuous(name = "Weight (grams)") +
+  theme(legend.position = "top")
+
+# Create a regression model RATS_reg
+RATS_reg <- lm(Weight ~ Time + Group, data = RATS)
+
+# Print out a summary of the model
+summary(RATS_reg)
+
+# Access library lme4
+library(lme4)
+
+# Create a random intercept model ref and ref1
+RATS_ref <- lmer(Weight ~ Time + Group + (1 | ID), data = RATS, REML = FALSE)
+RATS_ref1 <- lmer(Weight ~ Time + Group + (Time | ID), data = RATS, REML = FALSE)
+
+# Print the summary of the model
+summary(RATS_ref)
+
+# Print a summary of the model
+summary(RATS_ref1)
+
+# Perform an ANOVA test on the two models
+anova(RATS_ref1, RATS_ref)
+
+RATS_ref2 <- lmer(Weight ~ Time * Group + (Time | ID), data = RATS, REML = FALSE)
+
+# Print a summary of the model
+summary(RATS_ref2)
+
+# Perform an ANOVA test on the two models
+anova(RATS_ref2, RATS_ref1)
+
+# Draw the plot of RATS with the observed Weight values
+ggplot(RATS, aes(x = Time, y = Weight, group = ID)) +
+  geom_line(aes(linetype = Group)) +
+  scale_x_continuous(name = "Time (days)", breaks = seq(0, 60, 20)) +
+  scale_y_continuous(name = "Observed weight (grams)") +
+  theme(legend.position = "top")
+
+# Create a vector of the fitted values
+Fitted <- fitted(RATS_ref2)
+
+# Create a new column Fitted to RATS
+RATS <- RATS %>%
+  mutate(Fitted = Fitted)
+
+# Draw the plot of RATS with the Fitted values of weight
+ggplot(RATS, aes(x = Time, y = Fitted, group = ID)) +
+  geom_line(aes(linetype = Group)) +
+  scale_x_continuous(name = "Time (days)", breaks = seq(0, 60, 20)) +
+  scale_y_continuous(name = "Fitted weight (grams)") +
+  theme(legend.position = "top")
+
+
+
+```
+ANOTHER TRY
+
+Part 2, using BPRS data
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(tibble)
+library(tidyr) 
+
+# Load the BPRS dataset
+BPRS <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/BPRS.txt", sep = " ", header = TRUE)
+BPRS$treatment <- factor(BPRS$treatment)
+BPRS$subject <- factor(BPRS$subject)
+
+# Pivot the BPRS data
+BPRSL <- pivot_longer(BPRS, cols = -c(treatment, subject), names_to = "weeks", values_to = "bprs") %>% arrange(weeks)
+BPRSL$week <- as.integer(substr(BPRSL$weeks, 5, 5))
+
+# Standardize the variable bprs
+BPRSL <- BPRSL %>%
+  group_by(week) %>%
+  mutate(stdbprs = (bprs - mean(bprs)) / sd(bprs)) %>%
+  ungroup()
+
+# Draw the plot with observed bprs values
+ggplot(BPRSL, aes(x = week, y = bprs, linetype = subject)) +
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ treatment, labeller = label_both) +
+  theme(legend.position = "none") + 
+  scale_y_continuous(limits = c(min(BPRSL$bprs), max(BPRSL$bprs)))
+
+# Create a vector of the fitted values
+BPRSL_ref2 <- lmer(bprs ~ week * treatment + (week | subject), data = BPRSL, REML = FALSE)
+BPRSL$Fitted <- fitted(BPRSL_ref2)
+
+# Draw the plot with Fitted values of bprs
+
+ggplot(BPRSL, aes(x = week, y = Fitted, linetype = subject)) +
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ treatment, labeller = label_both) +
+  theme(legend.position = "none") + 
+  scale_y_continuous(limits = c(min(BPRSL$bprs), max(BPRSL$bprs)))
+
+
+# Number of subjects per group
+n <- 20
+
+# Summary data with mean and standard error of bprs by treatment and week
+BPRSS <- BPRSL %>%
+  group_by(treatment, week) %>%
+  summarise(mean = mean(bprs), se = sd(bprs) / sqrt(n)) %>%
+  ungroup()
+
+# Plot the mean profiles
+ggplot(BPRSS, aes(x = week, y = mean, linetype = treatment, shape = treatment)) +
+  geom_line(color = "black") +
+  scale_linetype_manual(values = c(1, 2)) +
+  geom_point(size = 3, color = "black") +
+  scale_shape_manual(values = c(1, 2)) +
+  theme(legend.position = c(0.8, 0.8)) +
+  scale_y_continuous(name = "mean(bprs) +/- se(bprs)")
+
+# Create a summary data by treatment and subject with mean as the summary variable (ignoring baseline week 0)
+BPRSL8S <- BPRSL %>%
+  filter(week > 0) %>%
+  group_by(treatment, subject) %>%
+  summarise(mean = mean(bprs)) %>%
+  ungroup()
+
+# Draw a boxplot of the mean versus treatment
+ggplot(BPRSL8S, aes(x = treatment, y = mean)) +
+  geom_boxplot() +
+  stat_summary(fun = "mean", geom = "point", shape = 23, size = 4, fill = "white") +
+  scale_y_continuous(name = "mean(bprs), weeks 1-8")
+
+# Find a suitable threshold value and use filter() to exclude the outlier
+threshold <- 60
+BPRSL8S1 <- BPRSL8S %>%
+  filter(mean <= threshold)
+
+# Draw a boxplot of the new data
+ggplot(BPRSL8S1, aes(x = treatment, y = mean)) +
+  geom_boxplot() +
+  stat_summary(fun = "mean", geom = "point", shape = 23, size = 4, fill = "white") +
+  scale_y_continuous(name = "mean(bprs), weeks 1-8")
+
+# Perform a two-sample t-test
+t.test(mean ~ treatment, data = BPRSL8S1, var.equal = TRUE)
+
+# Add the baseline from the original data as a new variable to the summary data
+BPRSL8S2 <- BPRSL8S %>%
+  mutate(baseline = BPRS$week0)
+
+# Fit the linear model with the mean as the response
+fit <- lm(mean ~ baseline + treatment, data = BPRSL8S2)
+
+# Compute the analysis of variance table for the fitted model with anova()
+anova_result <- anova(fit)
+print(anova_result)
+
+
+```
+
+
+
+
+
